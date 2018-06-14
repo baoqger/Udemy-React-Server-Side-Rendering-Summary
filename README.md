@@ -71,7 +71,7 @@ module.exports = {
 };
 ```
 
-#### 两个js bundle文件（）
+#### 两个js bundle文件
 
 延续着上面的方法，renderToString把Home组件在server端渲染成HTML字符串，但是它之只有HTML，而没有JS的部分，也就是说，如果给Home组件加一个Button按钮
 并去触发button的点击事件，在client端这个事件是无法触发的：
@@ -163,5 +163,6 @@ import Home from './components/Home';
 ReactDOM.hydrate(<Home />, document.querySelector('#root')); 
 ```
 对于这个架构，可以理解为：server端渲染生成了纯HTML的组件，并同时把client端的bundle文件发过去，到了client端这个bundle文件接管了整个页面，附加上各种 
-JS事件和生命周期的内容。
+JS事件和生命周期的内容等等。
+
 
