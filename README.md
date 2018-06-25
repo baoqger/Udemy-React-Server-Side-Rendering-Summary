@@ -172,6 +172,7 @@ JS事件和生命周期的内容等等。
 其实，还是很直接的，定义一个Routes.js的文件，里面定义所有的路由映射关系，而它本质上也是一个react组件，代码如下：
 
 routes.js
+
 ```
 import React from 'react';
 import { Route } from 'react-router-dom';
@@ -188,7 +189,7 @@ export default () => {
 ```
 有了这个路由，下一步需要对index.js和client.js两个文件进行更新，将Home组件替换成Route组件，如下：
   
-//client.js 
+client.js 
 
 ```
 import React from 'react';
@@ -204,7 +205,7 @@ ReactDOM.hydrate(
   , document.querySelector('#root'));
 ```
 
-// renderer.js
+renderer.js
 
 ```
 import React from 'react';
