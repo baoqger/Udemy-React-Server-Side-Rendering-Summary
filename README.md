@@ -166,3 +166,86 @@ ReactDOM.hydrate(<Home />, document.querySelector('#root'));
 JS事件和生命周期的内容等等。
 
 
+#### 支持react router
+
+到目前为止的例子里，只有一个Home组件，如果需要支持多个组件的路由，SSR是如何做的呢？
+其实，还是很直接的，定义一个Routes.js的文件，里面定义所有的路由映射关系，而它本质上也是一个react组件，代码如下：
+
+routes.js
+```
+import React from 'react';
+import { Route } from 'react-router-dom';
+import Home from './components/Home';
+
+export default () => {
+  return (
+    <div> //定义了两个路由, /hi这个路由就是个测试路由
+      <Route exact path="/" component={Home} />
+      <Route path="/hi" component={() => 'Hi'} />
+    </div>
+  );
+};
+```
+有了这个路由，下一步需要对index.js和client.js两个文件进行更新，将Home组件替换成Route组件，如下：
+  
+//client.js 
+
+```
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
+import Routes from './Routes';
+
+ReactDOM.hydrate(
+  // 使用BrowserRouter和Routes组件
+  <BrowserRouter>
+    <Routes />
+  </BrowserRouter>
+  , document.querySelector('#root'));
+```
+
+// renderer.js
+
+```
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom';
+import Routes from '../client/Routes';
+
+export default (req) => {
+  const content = renderToString(
+    // 此处是关键，StaticRouter，location和context属性 
+    <StaticRouter location={req.path} context={{}}>
+      <Routes />
+    </StaticRouter>
+  );
+  return `
+    <html>
+      <head></head>
+      <body>
+        <div id="root">${content}</div>
+        <script src="bundle.js"></script>
+      </body>
+    </html>
+  `;
+}
+```
+不同的地方时，client端和server端使用的Router组件不同，server端不能看到address bar，所以需要用StaticRouter，它是专门为SSR开发的。另外，这个Router还需要context和location两个属性，其中location就是当前的url path，这参数是从express route传递过来的，express代码更新如下：
+```
+import express from 'express';
+import renderer from './helper/renderer';
+
+const app = express();
+app.use(express.static('public'));
+
+//路由为*
+app.get('*', (req, res) => {
+  res.send(renderer(req)); //pass req参数
+});
+
+app.listen(3000, () => {
+  console.log('listening on port 3000...');
+});
+```
+此处有一个需要注意的地方，express的路由是*, 这样不管从浏览器发来什么样的路由url，express的route都不做过滤，直接交给SSR的路由处理。
+另外，其实SSR的架构想想也比较清晰了，主要就是维护两个入口文件: client.js和index.js(renderer.js)。真的app的实现还是共用一套逻辑，只是这两个entry文件中实现会因为server的不同而有不同。下一步像应用中添加Redux的部分。
